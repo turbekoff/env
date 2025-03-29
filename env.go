@@ -12,3 +12,16 @@ package env
 
 // tagOptions is the comma-separated options in a struct field's tag.
 type tagOptions map[string]string
+
+// Lookup retrieves the value of the option named by the key.
+// If the option is present in the tag the value (which may be empty) is
+// returned and the boolean is true. Otherwise, the returned value will be
+// empty and the boolean will be false.
+func (options tagOptions) Lookup(key string) (string, bool) {
+	if options == nil {
+		return "", false
+	}
+
+	value, exists := options[key]
+	return value, exists
+}
