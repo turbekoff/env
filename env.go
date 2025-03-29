@@ -10,6 +10,8 @@
 // https://github.com/turbekoff/env
 package env
 
+import "strings"
+
 // tagOptions is the comma-separated options in a struct field's tag.
 type tagOptions map[string]string
 
@@ -24,4 +26,40 @@ func (options tagOptions) Lookup(key string) (string, bool) {
 
 	value, exists := options[key]
 	return value, exists
+}
+
+// cut slices s around the first unescaped instance of sep,
+// returning the text before and after sep.
+// The found result reports whether unescaped sep appears in s.
+// If unescaped sep does not appear in s, cut returns s, "", false.
+func cut(s, sep string) (before string, after string, found bool) {
+	var escaping bool
+	var afterBuilder strings.Builder
+	var beforeBuilder strings.Builder
+
+	for i := 0; i < len(s); i++ {
+		if !escaping && s[i] == '\\' {
+			escaping = true
+			continue
+		}
+
+		if !escaping && i <= len(s)-len(sep) && strings.HasPrefix(s[i:], sep) {
+			for _, c := range s[i+len(sep):] {
+				if !escaping && c == '\\' {
+					escaping = true
+					continue
+				}
+
+				afterBuilder.WriteRune(c)
+				escaping = false
+			}
+
+			return beforeBuilder.String(), afterBuilder.String(), true
+		}
+
+		beforeBuilder.WriteByte(s[i])
+		escaping = false
+	}
+
+	return beforeBuilder.String(), "", false
 }
